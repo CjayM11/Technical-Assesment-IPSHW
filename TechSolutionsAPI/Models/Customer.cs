@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace TechSolutionsAPI.Models;
+﻿namespace TechSolutionsAPI.Models;
 
 public partial class Customer
 {

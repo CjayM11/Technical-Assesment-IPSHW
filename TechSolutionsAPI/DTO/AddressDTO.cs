@@ -3,20 +3,13 @@
     public class AddressDTO
     {
         public required int AddressId { get; set; }
-
         public required int CustomerId { get; set; }
+        public string StreetAddress { get; set; } = null!;
+        public string City { get; set; } = null!;
+        public string? Province { get; set; }
+        public string? PostalCode { get; set; }
+        public string Country { get; set; } = null!;
+        public bool? IsPrimary { get; set; }
 
-        public required string StreetAddress { get; set; }
-
-        public required string City { get; set; }
-
-        public required string Province { get; set; }
-
-        public required string PostalCode { get; set; }
-
-        public required string Country { get; set; }
-
-        // You could optionally add a FullAddress for convenience
-        public string FullAddress => $"{StreetAddress}, {City}, {Province}, {PostalCode}, {Country}";
     }
 }

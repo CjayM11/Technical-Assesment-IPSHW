@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Text.Json.Serialization;
 
 namespace TechSolutionsAPI.Models;
 
@@ -13,7 +12,7 @@ public partial class Address
 
     public string City { get; set; } = null!;
 
-    public string? Provice { get; set; }
+    public string? Province { get; set; }
 
     public string? PostalCode { get; set; }
 
@@ -21,6 +20,7 @@ public partial class Address
 
     public bool? IsPrimary { get; set; }
 
+    [JsonIgnore]
     public virtual Customer? Customer { get; set; }
 
     public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
