@@ -1,23 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using TechSolutionsAPI.Models;
 
-namespace TechSolutionsAPI.Models;
+namespace TechSolutionsAPI.Data;
 
-public partial class DbContext : Microsoft.EntityFrameworkCore.DbContext
+public partial class TechSolutionsDbContext(DbContextOptions<TechSolutionsDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
-    public DbContext()
-    {
-    }
+    public required virtual DbSet<Address> Addresses { get; set; }
 
-    public DbContext(DbContextOptions<DbContext> options)
-        : base(options)
-    {
-    }
+    public required virtual DbSet<Customer> Customers { get; set; }
 
-    public virtual DbSet<Address> Addresses { get; set; }
-
-    public virtual DbSet<Customer> Customers { get; set; }
-
-    public virtual DbSet<Invoice> Invoices { get; set; }
+    public required virtual DbSet<Invoice> Invoices { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -39,7 +32,7 @@ public partial class DbContext : Microsoft.EntityFrameworkCore.DbContext
             entity.Property(e => e.PostalCode)
                 .HasMaxLength(20)
                 .IsUnicode(false);
-            entity.Property(e => e.Provice)
+            entity.Property(e => e.Province)
                 .HasMaxLength(100)
                 .IsUnicode(false);
             entity.Property(e => e.StreetAddress)
@@ -96,7 +89,7 @@ public partial class DbContext : Microsoft.EntityFrameworkCore.DbContext
                 .HasConstraintName("FK__Invoices__Shippi__2E1BDC42");
         });
 
-        OnModelCreatingPartial(modelBuilder);
+        base.OnModelCreating(modelBuilder);
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
