@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace TechSolutionsAPI.Controllers
 {
@@ -7,5 +6,6 @@ namespace TechSolutionsAPI.Controllers
     [ApiController]
     public class CustomerController : ControllerBase
     {
+
     }
 }
