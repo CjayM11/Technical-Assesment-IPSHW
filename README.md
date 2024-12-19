@@ -1,4 +1,4 @@
-# Project Title
+[Dummy Data.txt](https://github.com/user-attachments/files/18199725/Dummy.Data.txt)# Project Title
 
 Tech Solutions Technical Addessment
 
@@ -19,6 +19,8 @@ Download visual studio and Microsoft SQL Server
 * Download the project files from the git reponsitory using the <Code> button
 * Using the provided Scripts provided , create your database using SQL Server 2022
 * [CREATE DATABASE TechSolutionsDb;.txt](https://github.com/user-attachments/files/18199186/CREATE.DATABASE.TechSolutionsDb.txt)
+* [Login.txt](https://github.com/user-attachments/files/18199726/Login.txt)ploading Dummy Data.txt…]()
+
 * Navigate to the TechSolutionsAPI project -> appsettings.json and replace the Server name with your local db desktop name
 * Using the command console , run the nuget restore MySolution.sln (CLI command ) 
 
@@ -29,9 +31,6 @@ All API calls and Schema are available when launching the project as swagger lau
 
 ## Using the website
 Once launch you wil see a login page 
-Using the demo details :
-Email : dev@techsolutions.com
-Password : 1267067!!@78Mm
 
 ![image](https://github.com/user-attachments/assets/5c055594-0ebe-411e-84b3-3d2c586d1ce3)
 
