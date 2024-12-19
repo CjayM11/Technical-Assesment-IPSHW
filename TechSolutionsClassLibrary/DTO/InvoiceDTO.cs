@@ -1,4 +1,4 @@
-﻿namespace TechSolutionsAPI.DTO
+﻿namespace TechSolutionsClassLibrary.DTO
 {
     public class InvoiceDTO
     {

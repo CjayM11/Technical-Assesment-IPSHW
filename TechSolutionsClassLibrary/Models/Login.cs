@@ -1,4 +1,4 @@
-﻿namespace TechSolutionsAPI.Models
+﻿namespace TechSolutionsClassLibrary.Models
 {
     public class Login
     {

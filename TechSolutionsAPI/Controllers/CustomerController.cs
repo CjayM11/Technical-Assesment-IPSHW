@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TechSolutionsAPI.Data;
-using TechSolutionsAPI.DTO;
-using TechSolutionsAPI.Models;
+using TechSolutionsClassLibrary.DTO;
+using TechSolutionsClassLibrary.Models;
 
 namespace TechSolutionsAPI.Controllers
 {
@@ -21,9 +21,9 @@ namespace TechSolutionsAPI.Controllers
         // POST: api/Customer
         //Create a new customer
         [HttpPost("create")]
-        public async Task<IActionResult> CreateCustomer([FromBody] CustomerDTO customerDto)
+        public async Task<IActionResult> CreateCustomer([FromBody] CreateCustomerDTO createCustomerDTO)
         {
-            if (customerDto == null)
+            if (createCustomerDTO == null)
             {
                 return BadRequest("Customer data is null");
             }
@@ -33,22 +33,23 @@ namespace TechSolutionsAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Map DTO to the Customer model
+            // Create the customer, excluding addresses since they're not in the DTO
             var newCustomer = new Customer
             {
-                FirstName = customerDto.FirstName,
-                LastName = customerDto.LastName,
-                Email = customerDto.Email,
-                PhoneNumber = customerDto.PhoneNumber,
+                CustomerId = createCustomerDTO.CustomerId,
+                FirstName = createCustomerDTO.FirstName,
+                LastName = createCustomerDTO.LastName,
+                Email = createCustomerDTO.Email,
+                PhoneNumber = createCustomerDTO.PhoneNumber
+
             };
 
             // Check if a customer with the same email already exists
-            var existingCustomer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == customerDto.Email);
+            var existingCustomer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == createCustomerDTO.Email);
 
             if (existingCustomer != null)
             {
-                // Return a bad request with a specific message
-                return BadRequest($"A customer with the email {customerDto.Email} already exists.");
+                return BadRequest($"A customer with the email {createCustomerDTO.Email} already exists.");
             }
 
             // Add the new customer to the context
@@ -57,18 +58,28 @@ namespace TechSolutionsAPI.Controllers
             // Save the changes to the database
             await _context.SaveChangesAsync();
 
-            // Return a response with the created customer and a 201 status code
-            return CreatedAtAction(nameof(GetCustomerById), new { id = newCustomer.CustomerId }, newCustomer);
-        }
+            // Map back to CustomerDTO for the response, but without addresses
+            var responseDTO = new CustomerDTO
+            {
+                CustomerId = newCustomer.CustomerId,
+                FirstName = newCustomer.FirstName,
+                LastName = newCustomer.LastName,
+                Email = newCustomer.Email,
+                PhoneNumber = newCustomer.PhoneNumber
+            };
 
+            return CreatedAtAction(nameof(GetCustomerById), new { id = newCustomer.CustomerId }, responseDTO);
+        }
         // GET: api/Customer
         //Retrieves a list of all customers from the database.
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Customer>>> GetAllCustomers()
         {
-            return await _context.Customers.ToListAsync();
+            var customers = await _context.Customers
+                .Include(c => c.Addresses)
+                .ToListAsync();
+            return Ok(customers);
         }
-
         // GET: api/Customer/{id}
         //Retrieves a specific customer by their unique ID.
         [HttpGet("{id}")]
@@ -86,47 +97,34 @@ namespace TechSolutionsAPI.Controllers
 
         // PUT: api/Customer/{id}
         //Updates the details of an existing customer using their ID.
-        [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] CustomerDTO customerDTO)
+        [HttpPost("update")]
+        public async Task<IActionResult> UpdateCustomer([FromBody] CustomerUpdateDTO customerUpdateDto)
         {
-            if (id != customerDTO.CustomerId)
+            if (customerUpdateDto == null)
             {
-                return BadRequest("Customer ID mismatch");
+                return BadRequest("Customer data is null");
             }
-
-            var existingCustomer = await _context.Customers.FindAsync(id);
+            Console.WriteLine(customerUpdateDto.CustomerId);
+            var existingCustomer = await _context.Customers.FindAsync(customerUpdateDto.CustomerId);
+            Console.WriteLine("CustomerId");
+            Console.WriteLine(existingCustomer);
 
             if (existingCustomer == null)
             {
-                return NotFound();
+                return NotFound($"Customer with ID {customerUpdateDto.CustomerId} not found.");
             }
 
-            // Update only the customer fields (not the ID)
-            existingCustomer.FirstName = customerDTO.FirstName;
-            existingCustomer.LastName = customerDTO.LastName;
-            existingCustomer.Email = customerDTO.Email;
-            existingCustomer.PhoneNumber = customerDTO.PhoneNumber;
+            // Update the customer fields
+            existingCustomer.FirstName = customerUpdateDto.FirstName;
+            existingCustomer.LastName = customerUpdateDto.LastName;
+            existingCustomer.Email = customerUpdateDto.Email;
+            //existingCustomer.PhoneNumber = customerUpdateDto.PhoneNumber;
 
-            // Mark the entity as modified
-            _context.Entry(existingCustomer).State = EntityState.Modified;
+            // Save changes to the database
+            await _context.SaveChangesAsync();
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CustomerExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            // Return the updated customer as a response
+            return Ok(existingCustomer);
         }
 
         // DELETE: api/Customer/{id}

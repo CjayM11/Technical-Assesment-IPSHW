@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using TechSolutionsAPI.Models;
+using TechSolutionsClassLibrary.Models;
 
 namespace TechSolutionsAPI.Data;
 
@@ -67,27 +67,27 @@ public partial class TechSolutionsDbContext(DbContextOptions<TechSolutionsDbCont
                 .IsUnicode(false);
         });
 
-        modelBuilder.Entity<Invoice>(entity =>
-        {
-            entity.HasKey(e => e.InvoiceId).HasName("PK__Invoices__D796AAB5DF4BF638");
+        //modelBuilder.Entity<Invoice>(entity =>
+        //{
+        //    entity.HasKey(e => e.InvoiceId).HasName("PK__Invoices__D796AAB5DF4BF638");
 
-            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.InvoiceDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.ShippingAddressId).HasColumnName("ShippingAddressID");
-            entity.Property(e => e.Status)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+        //    entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
+        //    entity.Property(e => e.InvoiceDate)
+        //        .HasDefaultValueSql("(getdate())")
+        //        .HasColumnType("datetime");
+        //    entity.Property(e => e.ShippingAddressId).HasColumnName("ShippingAddressID");
+        //    entity.Property(e => e.Status)
+        //        .HasMaxLength(50)
+        //        .IsUnicode(false);
 
-            entity.HasOne(d => d.Customer).WithMany(p => p.Invoices)
-                .HasForeignKey(d => d.CustomerId)
-                .HasConstraintName("FK__Invoices__Custom__2D27B809");
+        //    entity.HasOne(d => d.Customer).WithMany(p => p.Invoices)
+        //        .HasForeignKey(d => d.CustomerId)
+        //        .HasConstraintName("FK__Invoices__Custom__2D27B809");
 
-            entity.HasOne(d => d.ShippingAddress).WithMany(p => p.Invoices)
-                .HasForeignKey(d => d.ShippingAddressId)
-                .HasConstraintName("FK__Invoices__Shippi__2E1BDC42");
-        });
+        //    entity.HasOne(d => d.ShippingAddress).WithMany(p => p.Invoices)
+        //        .HasForeignKey(d => d.ShippingAddressId)
+        //        .HasConstraintName("FK__Invoices__Shippi__2E1BDC42");
+        //});
 
         base.OnModelCreating(modelBuilder);
     }

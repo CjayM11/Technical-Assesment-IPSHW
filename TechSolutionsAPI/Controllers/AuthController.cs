@@ -4,7 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using TechSolutionsAPI.Models;
+using TechSolutionsClassLibrary.Models;
 
 namespace TechSolutionsAPI.Controllers
 {
@@ -27,7 +27,7 @@ namespace TechSolutionsAPI.Controllers
 
 
         //Login Method to handle user login
-        //Using EF, ensures a user is generated a JWT token to authenticate the user after sign in
+        //Ensures a user is generated a JWT token to authenticate the user after sign in
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] Login model)
         {
@@ -42,11 +42,16 @@ namespace TechSolutionsAPI.Controllers
             // Generate JWT Token
             var token = GenerateJwtToken(user);
 
-            return Ok(new { Token = token });
+            //Returning Token and UserId to be able to use it later with in the project
+            return Ok(new
+            {
+                Token = token,
+                UserID = user.Id
+            });
         }
 
         // Register method to handle user registration
-        //Using EF , ApplicationUser(Models) allows customization down the line
+        //ApplicationUser(Models) allows customization down the line
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] Register model)
         {

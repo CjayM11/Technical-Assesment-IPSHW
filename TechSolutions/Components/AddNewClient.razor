@@ -1,0 +1,71 @@
+﻿@using MudBlazor
+@using TechSolutionsClassLibrary.DTO
+@inject CustomerService customerService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add New Client</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="NewClient.FirstName" Label="First Name" Required="true" />
+        <MudTextField @bind-Value="NewClient.LastName" Label="Last Name" Required="true" />
+        <MudTextField @bind-Value="NewClient.Email" Label="Email" Required="true" />
+        <MudTextField @bind-Value="NewClient.PhoneNumber" Label="Phone Number" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Add</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    private CustomerDTO NewClient = new CustomerDTO
+        {
+            CustomerId = 0, 
+            FirstName = string.Empty,
+            LastName = string.Empty,
+            Email = string.Empty,
+            PhoneNumber = string.Empty
+        };
+
+    void Cancel() => MudDialog.Cancel();
+
+    async Task Submit()
+    {
+        // Basic validation before submission
+        if (string.IsNullOrWhiteSpace(NewClient.FirstName) ||
+           string.IsNullOrWhiteSpace(NewClient.LastName) ||
+           string.IsNullOrWhiteSpace(NewClient.Email))
+        {
+            Snackbar.Add("Please fill in all required fields.", Severity.Error);
+            return;
+        }
+
+        try
+        {
+         
+            NewClient.CustomerId = 0;
+            NewClient.Addresses = null;
+
+
+            var createdCustomer = await customerService.CreateCustomerAsync(NewClient);
+            if (createdCustomer != null)
+            {
+                Snackbar.Add("Client added successfully!", Severity.Success);
+    
+                MudDialog.Close(DialogResult.Ok(createdCustomer));
+            }
+            else
+            {
+                Snackbar.Add("Failed to add client.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding client: {ex.Message}", Severity.Error);
+        }
+    }
+}

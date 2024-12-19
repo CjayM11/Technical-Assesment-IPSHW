@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TechSolutionsAPI.Data;
-using TechSolutionsAPI.DTO;
-using TechSolutionsAPI.Models;
+using TechSolutionsClassLibrary.DTO;
+using TechSolutionsClassLibrary.Models;
 
 namespace TechSolutionsAPI.Controllers
 {
@@ -17,81 +17,102 @@ namespace TechSolutionsAPI.Controllers
             _context = context;
         }
 
+        [HttpGet("get/{addressId}")]
+        public async Task<ActionResult<Address>> GetAddressById(int addressId)
+        {
+            var address = await _context.Addresses.FindAsync(addressId);
+
+            if (address == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(address);
+        }
+
         // POST: api/Addresses/create
         //Allows users to create a new address.
-        [HttpPost("create")]
-        public async Task<ActionResult<Address>> CreateAddress([FromBody] AddressDTO addressDto)
+        //[HttpPost("create")]
+        //public async Task<ActionResult<Address>> CreateAddress([FromBody] AddressDTO addressDto)
+        //{
+        //    if (addressDto == null)
+        //    {
+        //        return BadRequest("Address data is null");
+        //    }
+
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+
+        //    // Validate the customer ID
+        //    var existingCustomer = await _context.Customers.FindAsync(addressDto.CustomerId);
+        //    if (existingCustomer == null)
+        //    {
+        //        return BadRequest($"Customer with ID {addressDto.CustomerId} does not exist.");
+        //    }
+
+        //    // Map AddressDTO to Address entity
+        //    var newAddress = new Address
+        //    {
+        //        StreetAddress = addressDto.StreetAddress,
+        //        City = addressDto.City,
+        //        Province = addressDto.Province,
+        //        PostalCode = addressDto.PostalCode,
+        //        Country = addressDto.Country,
+        //        IsPrimary = false,
+        //        CustomerId = addressDto.CustomerId
+        //    };
+
+        //    // Add the new address to the context
+        //    _context.Addresses.Add(newAddress);
+
+        //    // Save the changes to the database
+        //    await _context.SaveChangesAsync();
+
+        //    // Return a response with the created address and a 201 status code
+        //    return CreatedAtAction(nameof(GetAddressById), new { id = newAddress.AddressId }, newAddress);
+        //}
+
+        // GET: api/Addresses/1
+        //Retrieves Client specific addresses from the database
+        // Get all addresses for the logged-in user
+        [HttpGet("{customerId}")]
+        public async Task<ActionResult<IEnumerable<Address>>> GetAllAddressesForCustomer(int customerId)
+        {
+            var addresses = await _context.Addresses
+                .Where(a => a.CustomerId == customerId)
+                .ToListAsync();
+
+            if (addresses == null || !addresses.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(addresses);
+        }
+
+        // PUT: api/Addresses/update/5
+        //updates Client Specific Addresses
+        [HttpPut("update/{id}")]
+        public async Task<IActionResult> UpdateAddress(int id, [FromBody] AddressDTO addressDto)
         {
             if (addressDto == null)
             {
                 return BadRequest("Address data is null");
             }
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            Console.WriteLine(addressDto.AddressId);
+            var existingAddress = await _context.Addresses.FindAsync(addressDto.AddressId);
+            Console.WriteLine("AddressId");
+            Console.WriteLine(existingAddress);
 
-            // Validate the customer ID
-            var existingCustomer = await _context.Customers.FindAsync(addressDto.CustomerId);
-            if (existingCustomer == null)
-            {
-                return BadRequest($"Customer with ID {addressDto.CustomerId} does not exist.");
-            }
-
-            // Map AddressDTO to Address entity
-            var newAddress = new Address
-            {
-                StreetAddress = addressDto.StreetAddress,
-                City = addressDto.City,
-                Province = addressDto.Province,
-                PostalCode = addressDto.PostalCode,
-                Country = addressDto.Country,
-                IsPrimary = false,
-                CustomerId = addressDto.CustomerId
-            };
-
-            // Add the new address to the context
-            _context.Addresses.Add(newAddress);
-
-            // Save the changes to the database
-            await _context.SaveChangesAsync();
-
-            // Return a response with the created address and a 201 status code
-            return CreatedAtAction(nameof(GetAddressById), new { id = newAddress.AddressId }, newAddress);
-        }
-
-        // GET: api/Addresses/1
-        //Retrieves Client specific addresses from the database
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Address>> GetAddressById(int id)
-        {
-            var addresses = await _context.Addresses.FindAsync(id);
-
-            if (addresses == null)
-            {
-                return NotFound();
-            }
-
-            return addresses;
-        }
-
-        // PUT: api/Addresses/update/5
-        //updates Client Specific Addresses
-        [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateAddress(int id, AddressDTO addressDto)
-        {
-            if (id != addressDto.AddressId)
-            {
-                return BadRequest("Address ID mismatch.");
-            }
-
-            var existingAddress = await _context.Addresses.FindAsync(id);
             if (existingAddress == null)
             {
-                return NotFound("Address not found.");
+                return NotFound($"Address with ID {addressDto.AddressId} not found.");
             }
 
+            // Update the address fields
             existingAddress.StreetAddress = addressDto.StreetAddress;
             existingAddress.City = addressDto.City;
             existingAddress.Province = addressDto.Province;
@@ -99,23 +120,11 @@ namespace TechSolutionsAPI.Controllers
             existingAddress.Country = addressDto.Country;
             existingAddress.IsPrimary = addressDto.IsPrimary;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AddressExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            // Save changes to the database
+            await _context.SaveChangesAsync();
 
-            return NoContent();
+            // Return the updated address as a response
+            return Ok(existingAddress);
         }
 
         // DELETE: api/Address/{id}
@@ -135,9 +144,5 @@ namespace TechSolutionsAPI.Controllers
             return NoContent();
         }
 
-        private bool AddressExists(int id)
-        {
-            return _context.Addresses.Any(e => e.AddressId == id);
-        }
     }
 }

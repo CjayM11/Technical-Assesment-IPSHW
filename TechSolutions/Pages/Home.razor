@@ -1,7 +1,478 @@
-﻿@page "/"
+﻿@page "/dashboard"
+@using MudBlazor
+@using TechSolutions.Components
+@using TechSolutionsClassLibrary.DTO
+@using TechSolutionsClassLibrary.Models
+@inject HttpClient httpClient
+@inject CustomerService customerService
+@inject AddressService addressService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+<PageTitle>Dashboard</PageTitle>
 
-<PageTitle>Home</PageTitle>
+<MudGrid Class="mt-3">
+    <MudItem Class="d-flex justify-center flex-grow-1 gap-4" xs="7">
+        <MudTable MultiSelection="true" Class="pa-3" CanCancelEdit="true" RowEditCommit="updateCustomer" T="CustomerDTO" Elevation="0" Items="@FilteredCustomers" Hover="true" Breakpoint="Breakpoint.Sm" @bind-SelectedItem="selectedCustomer" SelectedItemsChanged="OnSelectedItemsChanged">
+            <ToolBarContent>
+                <MudButton Variant="Variant.Outlined" OnClick="ShowAddClientDialog">Add New Client</MudButton>
 
-<h1>Hello, world!</h1>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchString" Placeholder="Search Customers" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mb-4" />
+            </ToolBarContent>
+            <ColGroup>
+                <col />
+                <col />
+                <col />
+                <col />
+                <col />
+            </ColGroup>
+            <HeaderContent>
+                @* <MudTh><MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete" /></MudTh> *@
+                <MudTh>Customer ID</MudTh>
+                <MudTh>First Name</MudTh>
+                <MudTh>Last Name</MudTh>
+                <MudTh>Email</MudTh>
+                <MudTh>Addresses</MudTh>
+                <MudTh>Invoices</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Customer ID">@context.CustomerId</MudTd>
+                <MudTd DataLabel="First Name">@context.FirstName</MudTd>
+                <MudTd DataLabel="Last Name">@context.LastName</MudTd>
+                <MudTd DataLabel="Email">@context.Email</MudTd>
+                <MudTd>
+                    <MudButton FullWidth="true" Variant="Variant.Outlined" Size="Size.Small"
+                    OnClick="@(() => ToggleAddressDetails(context.CustomerId))">
+                        @((context.ShowDetails == true) ? "Hide" : "Show") Address Details
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+            <!-- Row Editing Template for the Main Table -->
+            <RowEditingTemplate>
+                @*  <MudTd DataLabel="Delete">Delete</MudTd> *@
+                <MudTd DataLabel="Customer ID">@context.CustomerId</MudTd>
+                <MudTd DataLabel="First Name">
+                    <MudTextField @bind-Value="context.FirstName" Label="First Name" />
+                </MudTd>
+                <MudTd DataLabel="Last Name">
+                    <MudTextField @bind-Value="context.LastName" Label="Last Name" />
+                </MudTd>
+                <MudTd DataLabel="Email">
+                    <MudTextField @bind-Value="context.Email" Label="Email" />
+                </MudTd>
+            </RowEditingTemplate>
 
-Welcome to your new app.
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+
+    <MudItem xs="5">
+        <!-- New Separate Table for Address Details -->
+        @if (selectedCustomer != null && selectedCustomer.ShowDetails)
+        {
+            <MudItem Class="justify-center" xs="12">
+                <MudCard Class="pa-5">
+                    <MudCardHeader>
+                        <MudText Typo="Typo.body1">
+                            Address Details for <strong>@selectedCustomer.FirstName @selectedCustomer.LastName</strong>
+                        </MudText>
+                    </MudCardHeader>
+                    <MudCardContent Class="pa-0">
+                        <MudTable MultiSelection="true" Class="mud-elevation-0" CanCancelEdit="true" RowEditCommit="UpdateAddress" T="AddressDTO" Elevation="0" Items="@selectedCustomer.Addresses" Hover="true" Breakpoint="Breakpoint.Sm" @bind-SelectedItem="selectedAddress" SelectedItemsChanged="OnSelectedAddressesChanged">
+    <ToolBarContent>
+        <MudButton Variant="Variant.Outlined" OnClick="ShowAddAddressDialog">Add New Address</MudButton>
+        
+      
+    </ToolBarContent>
+    <ColGroup>
+        <col />
+        <col />
+        <col style="width:150px;" />
+        <col />
+        <col />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Address ID</MudTh>
+        <MudTh>Street Address</MudTh>
+        <MudTh>City</MudTh>
+        <MudTh>Province</MudTh>
+        <MudTh>Postal Code</MudTh>
+        <MudTh>Country</MudTh>
+        <MudTh>Primary</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Address ID">@context.AddressId</MudTd>
+        <MudTd DataLabel="Street Address">@context.StreetAddress</MudTd>
+        <MudTd DataLabel="City">@context.City</MudTd>
+        <MudTd DataLabel="Province">@context.Province</MudTd>
+        <MudTd DataLabel="Postal Code">@context.PostalCode</MudTd>
+        <MudTd DataLabel="Country">@context.Country</MudTd>
+        <MudTd DataLabel="Primary">@(context.IsPrimary ? "Yes" : "No")</MudTd>
+    </RowTemplate>
+    <!-- Row Editing Template for Address Table -->
+    <RowEditingTemplate>
+        <MudTd DataLabel="Address ID">@context.AddressId</MudTd>
+        <MudTd DataLabel="Street Address">
+            <MudTextField @bind-Value="context.StreetAddress" Label="Street Address" />
+        </MudTd>
+        <MudTd DataLabel="City">
+            <MudTextField @bind-Value="context.City" Label="City" />
+        </MudTd>
+        <MudTd DataLabel="Province">
+            <MudTextField @bind-Value="context.Province" Label="Province" />
+        </MudTd>
+        <MudTd DataLabel="Postal Code">
+            <MudTextField @bind-Value="context.PostalCode" Label="Postal Code" />
+        </MudTd>
+        <MudTd DataLabel="Country">
+            <MudTextField @bind-Value="context.Country" Label="Country" />
+        </MudTd>
+        <MudTd DataLabel="Primary">
+        <MudCheckBox T="bool?" @bind-Checked="context.IsPrimary" Label="Primary" />
+        </MudTd>
+    </RowEditingTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string searchString = "";
+    private CustomerDTO selectedCustomer;
+    private HashSet<CustomerDTO> selectedCustomers = new HashSet<CustomerDTO>();
+    private List<CustomerDTO> Customers = new List<CustomerDTO>();
+
+    private string searchAddressString = "";
+    private AddressDTO selectedAddress;
+    private HashSet<AddressDTO> selectedAddresses = new HashSet<AddressDTO>();
+
+    private IEnumerable<CustomerDTO> FilteredCustomers => string.IsNullOrWhiteSpace(searchString)
+        ? Customers
+        : Customers.Where(c => c.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+                               c.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+                               c.Email.Contains(searchString, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Console.WriteLine("Starting to fetch customers...");
+            var customers = await customerService.GetCustomersAsync();
+            Console.WriteLine($"Fetched {customers?.Count ?? 0} customers from the service.");
+
+            if (customers == null || !customers.Any())
+            {
+                Console.WriteLine("No customers were returned from the service.");
+            }
+            else
+            {
+                Customers = customers.Select(customer => new CustomerDTO
+                    {
+                        CustomerId = customer.CustomerId,
+                        FirstName = customer.FirstName,
+                        LastName = customer.LastName,
+                        Email = customer.Email,
+                        PhoneNumber = customer.PhoneNumber,
+                        Addresses = customer.Addresses.Select(address => new AddressDTO
+                        {
+                            CustomerId = address.CustomerId,
+                            AddressId = address.AddressId,
+                            StreetAddress = address.StreetAddress,
+                            City = address.City,
+                            Province = address.Province,
+                            PostalCode = address.PostalCode,
+                            Country = address.Country
+                        }).ToList(),
+                        ShowDetails = false
+                    }).ToList();
+
+                Console.WriteLine($"Mapped {Customers.Count} customers to DTOs.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while initializing customers: {ex.Message}");
+            Snackbar.Add("Failed to load customers. Please try again.", Severity.Error);
+        }
+    }
+
+    //show address - toggle button functionality
+    private void ToggleAddressDetails(int customerId)
+    {
+        var customer = Customers.FirstOrDefault(c => c.CustomerId == customerId);
+        if (customer != null)
+        {
+            customer.ShowDetails = !customer.ShowDetails;
+            selectedCustomer = customer.ShowDetails ? customer : null;
+        }
+    }
+
+    //mapping customer to update
+    private async void updateCustomer(object element)
+    {
+        if (element is CustomerDTO customer)
+        {
+            CustomerUpdateDTO customerUpdateDto = new CustomerUpdateDTO
+                {
+                    CustomerId = customer.CustomerId,
+                    FirstName = customer.FirstName,
+                    LastName = customer.LastName,
+                    Email = customer.Email
+                };
+            Console.WriteLine(customerUpdateDto.CustomerId);
+            Console.WriteLine(customerUpdateDto.FirstName);
+            Console.WriteLine(customerUpdateDto.LastName);
+            Console.WriteLine(customerUpdateDto.Email);
+            await SaveCustomerDetails(customerUpdateDto);
+        }
+        else
+        {
+            Snackbar.Add("Failed to cast the element to CustomerDTO.", Severity.Error);
+        }
+    }
+
+    // Update Customer : To DB
+    public async Task SaveCustomerDetails(CustomerUpdateDTO customerUpdateDto)
+    {
+        Console.WriteLine(customerUpdateDto);
+        Snackbar.Add($"Saving details for {customerUpdateDto.FirstName} {customerUpdateDto.LastName}", Severity.Success);
+
+        bool updateSuccess = await customerService.UpdateCustomerAsync(customerUpdateDto);
+
+        if (updateSuccess)
+        {
+            bool isUpdated = await customerService.CheckCustomerUpdatedAsync(customerUpdateDto);
+
+            if (isUpdated)
+            {
+                Snackbar.Add("Customer details updated successfully.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Failed to verify customer update.", Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add("Failed to update customer.", Severity.Error);
+        }
+        StateHasChanged(); // Force a UI update after the operation
+    }
+
+    //Update Address : To DB
+    public async Task SaveAddressDetails(AddressDTO addressDto)
+    {
+        Console.WriteLine(addressDto);
+        //Snackbar.Add($"Saving details for {customerUpdateDto.FirstName} {customerUpdateDto.LastName}", Severity.Success);
+
+        bool updateSuccess = await addressService.UpdateAddressAsync(addressDto);
+
+        if (updateSuccess)
+        {
+            bool isUpdated = await addressService.CheckAddressUpdatedAsync(addressDto);
+
+            if (isUpdated)
+            {
+                Snackbar.Add("Customer details updated successfully.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Failed to verify customer update.", Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add("Failed to update customer.", Severity.Error);
+        }
+        StateHasChanged(); // Force a UI update after the operation
+    }
+
+    // Looks for change on checkbox to delete user
+    private async Task OnSelectedItemsChanged(HashSet<CustomerDTO> newSelection)
+    {
+
+        // Log the state of selections before changes
+        Console.WriteLine($"Old selection count: {selectedCustomers.Count}");
+        foreach (var customer in selectedCustomers)
+        {
+            Console.WriteLine($"Old selection: {customer.CustomerId} - {customer.FirstName} {customer.LastName}");
+        }
+
+        if (newSelection.Count > selectedCustomers.Count)
+        {
+            Console.WriteLine($"Selection changed. New count: {newSelection.Count}");
+
+            // Log new selections
+            foreach (var customer in newSelection)
+            {
+                Console.WriteLine($"New selection: {customer.CustomerId} - {customer.FirstName} {customer.LastName}");
+            }
+
+            var newlySelected = newSelection.Except(selectedCustomers).FirstOrDefault();
+            if (newlySelected != null)
+            {
+                Console.WriteLine($"Newly selected customer: {newlySelected.CustomerId} - {newlySelected.FirstName} {newlySelected.LastName}");
+
+                bool? result = await DialogService.ShowMessageBox(
+                    "Confirmation",
+                    $"Do you want to delete {newlySelected.FirstName} {newlySelected.LastName}?",
+                    "Yes",
+                    "No");
+
+                Console.WriteLine($"User chose to delete: {result}");
+
+                if (result == true)
+                {
+                    bool deleteSuccessful = await customerService.DeleteCustomerAsync(newlySelected.CustomerId);
+
+                    Console.WriteLine($"Delete attempt result: {deleteSuccessful}");
+
+                    if (deleteSuccessful)
+                    {
+                        Console.WriteLine($"Removing customer from Customers list: {newlySelected.CustomerId}");
+                        Customers.Remove(newlySelected);
+                        Console.WriteLine($"Removing customer from newSelection: {newlySelected.CustomerId}");
+                        newSelection.Remove(newlySelected);
+                        Snackbar.Add("Customer deleted successfully", Severity.Success);
+                    }
+                    else
+                    {
+                        Snackbar.Add("Failed to delete customer", Severity.Error);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"User cancelled deletion, removing from selection: {newlySelected.CustomerId}");
+                    newSelection.Remove(newlySelected);
+                }
+            }
+            else
+            {
+                Console.WriteLine("No new customer was selected.");
+            }
+        }
+        else
+        {
+            Console.WriteLine("No new selections, or selections decreased.");
+        }
+
+        selectedCustomers = new HashSet<CustomerDTO>(newSelection);
+        Console.WriteLine($"Updated selection count: {selectedCustomers.Count}");
+        foreach (var customer in selectedCustomers)
+        {
+            Console.WriteLine($"Updated selection: {customer.CustomerId} - {customer.FirstName} {customer.LastName}");
+        }
+
+        StateHasChanged(); // Force UI update after selection changes
+    }
+
+    // Add client dialog
+    private async Task ShowAddClientDialog()
+    {
+        var dialog = DialogService.Show<AddNewClient>("Add New Client");
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var newClient = (CustomerDTO)result.Data;
+
+            Console.WriteLine("Home.razor ShowAddClientDialog");
+            Console.WriteLine(newClient);
+            if (newClient != null)
+            {
+                // Add the new client to your local list
+                Customers.Add(newClient);
+
+                // Sort customers by CustomerId or another property if necessary
+                Customers = Customers.OrderBy(c => c.CustomerId).ToList();
+
+                Snackbar.Add("New client added!", Severity.Success);
+                StateHasChanged(); // Refresh the UI to show the new client
+            }
+        }
+    }
+
+
+  // map address to update
+    private async void UpdateAddress(object element)
+    {
+        if (element is AddressDTO address)
+        {
+            AddressDTO addressUpdate = new AddressDTO
+                {
+                    CustomerId = address.CustomerId,
+                    AddressId = address.AddressId,
+                    StreetAddress = address.StreetAddress,
+                    City = address.City,
+                    PostalCode = address.PostalCode,
+                    Country = address.Country
+                };
+
+            await SaveAddressDetails(addressUpdate);
+        }
+        else
+        {
+            Snackbar.Add("Failed to cast the element to AddressDTO.", Severity.Error);
+        }
+    }
+
+
+    // beginning of implementation for address delete
+    private async Task OnSelectedAddressesChanged(HashSet<AddressDTO> newSelection)
+    {
+        // Handle address selection changes
+        var newlySelected = newSelection.Except(selectedAddresses).FirstOrDefault();
+        if (newlySelected != null)
+        {
+            bool? result = await DialogService.ShowMessageBox(
+                "Confirmation",
+                $"Do you want to delete this address?",
+                "Yes",
+                "No");
+
+            if (result == true)
+            {
+               
+                // bool deleteSuccess = await customerService.DeleteAddressAsync(newlySelected.AddressId);
+                // if (deleteSuccess)
+                // {
+                //     selectedCustomer.Addresses.Remove(newlySelected);
+                //     Snackbar.Add("Address deleted successfully", Severity.Success);
+                // }
+                // else
+                // {
+                //     Snackbar.Add("Failed to delete address", Severity.Error);
+                // }
+            }
+        }
+        selectedAddresses = new HashSet<AddressDTO>(newSelection);
+        StateHasChanged();
+    }
+
+    private async Task ShowAddAddressDialog()
+    {
+        var dialog = DialogService.Show<AddNewAddress>("Add New Address");
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var newAddress = (AddressDTO)result.Data;
+            if (newAddress != null)
+            {
+                // Add the new address to the customer's address list
+                selectedCustomer.Addresses.Add(newAddress);
+                Snackbar.Add("New address added!", Severity.Success);
+                StateHasChanged();
+            }
+        }
+    }
+}
+

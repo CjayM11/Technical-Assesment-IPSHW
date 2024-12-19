@@ -1,8 +1,8 @@
-﻿namespace TechSolutionsAPI.Models;
+﻿namespace TechSolutionsClassLibrary.Models;
 
 public partial class Customer
 {
-    public int CustomerId { get; set; }
+    public required int CustomerId { get; set; }
 
     public string FirstName { get; set; } = null!;
 
@@ -14,7 +14,7 @@ public partial class Customer
 
     public DateTime? InvoiceDate { get; set; }
 
-    public virtual ICollection<Address> Addresses { get; set; } = new List<Address>();
+    public List<Address>? Addresses { get; set; }
 
-    public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
+    //public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 }

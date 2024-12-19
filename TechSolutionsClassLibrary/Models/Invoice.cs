@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace TechSolutionsAPI.Models;
+﻿namespace TechSolutionsClassLibrary.Models;
 
 public partial class Invoice
 {

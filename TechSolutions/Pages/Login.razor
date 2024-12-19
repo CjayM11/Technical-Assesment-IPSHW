@@ -1,0 +1,131 @@
+﻿@using MudBlazor
+@using TechSolutions.Services
+@inject LoginService loginService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+@rendermode InteractiveWebAssembly
+
+@page "/"
+<MudGrid Class="align-content-center justify-center" Style="height: 100vh; width: 100%; margin: 0; margin-top:-5%;">
+    <MudItem>
+        <MudCard Class="pa-6">
+            <MudCardContent>
+                @if (isLogin)
+                {
+                    <MudGrid>
+                        <MudItem>
+                            <!-- Login Form -->
+                            <MudText Typography="Typo.h5" Align="Align.Left">Login</MudText>
+                            <MudForm class="pa-1" @ref="form">
+                                <MudTextField class="pa-1" Label="Email" @bind-Value="email" Required="true" Type="email" />
+                                <MudTextField Label="Password" @bind-Value="password" Required="true" Type="password" />
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="HandleLoginSubmit" Class="mt-2">Login</MudButton>
+                            </MudForm>
+
+
+
+                        </MudItem>
+                        <!-- Divider -->
+                        <MudDivider Class="ml-4" Vertical="true" FlexItem="true" />
+                        <MudItem Class="align-content-center">
+                            <MudText Typography="Typo.body2" Align="Align.Center">
+                                Don’t have an account?
+                            </MudText>
+                            <MudButton Class="align-content-center" Variant="Variant.Text" Color="Color.Secondary" OnClick="ShowRegisterForm">Register</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                }
+                else
+                {
+                    <MudGrid>
+                        <MudItem>
+                            <!-- Register Form -->
+                            <MudText Typography="Typo.h5" Align="Align.Left">Register</MudText>
+                            <MudForm class="pa-1" @ref="form" OnValidSubmit="HandleRegisterSubmit">
+                                <MudTextField class="pa-1" Label="Email" @bind-Value="email" Required="true" Type="email" />
+                                <MudTextField Label="Password" @bind-Value="password" Required="true" Type="password" />
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" Class="mt-2" FullWidth="true">Register</MudButton>
+                            </MudForm>
+                        </MudItem>
+                        <!-- Divider -->
+                        <MudDivider Class="ml-4" Vertical="true" FlexItem="true" />
+                        <MudItem Class="align-content-center">
+                            <MudText Typography="Typo.body2" Align="Align.Right">
+                                Already have an account?
+                            </MudText>
+                            <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="ShowLoginForm">Login</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+
+    private MudForm form;
+    private bool isLogin = true; 
+    private string email;
+    private string password;
+
+    private void ShowRegisterForm()
+    {
+        isLogin = false;
+    }
+
+    private void ShowLoginForm()
+    {
+        isLogin = true;
+    }
+
+    // Login
+    private async Task HandleLoginSubmit()
+    {
+        await JSRuntime.InvokeVoidAsync("console.log", "HandleLoginSubmit method hit!");
+        try
+        {
+            var loginResponse = await loginService.Login(email, password);
+            string token = loginResponse.Token;
+            await JSRuntime.InvokeVoidAsync("console.log", token);
+            string userId = loginResponse.UserID;
+            await JSRuntime.InvokeVoidAsync("console.log", userId);
+            // Save token and user ID in session storage
+            await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "token", token);
+            await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "userId", userId);
+
+            // Display success toast
+            Snackbar.Add("Successful Login", Severity.Success);
+            await JSRuntime.InvokeVoidAsync("console.log", "Successful Login!");
+            StateHasChanged();
+            // Navigate to dashboard
+            Navigation.NavigateTo("/dashboard");
+        }
+        catch (Exception ex)
+        {
+            // Handle login failure, show error message
+            Snackbar.Add("Incorrect Details", Severity.Error);
+            await JSRuntime.InvokeVoidAsync("console.log", "Incorrect Details");
+        }
+    }
+
+    private async Task HandleFormSubmit()
+    {
+        // Prevent default form submission to avoid page refresh
+        await JSRuntime.InvokeVoidAsync("event.preventDefault");
+    }
+
+
+
+    private void HandleInvalidSubmit()
+    {
+        Snackbar.Add("Form is invalid. Please fill out all required fields.", Severity.Warning);
+        JSRuntime.InvokeVoidAsync("console.log", "Form is invalid. Please fill out all required fields.!");
+    }
+
+    private void HandleRegisterSubmit()
+    {
+        // Register logic goes here
+    }
+}
