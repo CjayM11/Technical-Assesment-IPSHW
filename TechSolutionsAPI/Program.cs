@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TechSolutionsAPI.Data;
+using TechSolutionsAPI.SeedData;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +79,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 var app = builder.Build();
+
+// Create the database if it doesn't exist when the app starts
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<TechSolutionsDbContext>();
+
+    // This ensures the database is created (without seeding)
+    dbContext.Database.EnsureCreated();
+
+    // Remove the line that tries to call IApplicationDbInitializer
+    // Instead call the SeedData.Initialize() method
+    SeedData.Initialize(scope.ServiceProvider);
+}
 
 // Use CORS
 app.UseCors("AllowLocalhost");

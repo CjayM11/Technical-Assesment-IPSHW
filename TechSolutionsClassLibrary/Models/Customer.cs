@@ -2,7 +2,7 @@
 
 public partial class Customer
 {
-    public required int CustomerId { get; set; }
+    public int CustomerId { get; set; }
 
     public string FirstName { get; set; } = null!;
 
@@ -16,5 +16,4 @@ public partial class Customer
 
     public List<Address>? Addresses { get; set; }
 
-    //public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 }

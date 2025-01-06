@@ -23,5 +23,4 @@ public partial class Address
     [JsonIgnore]
     public virtual Customer? Customer { get; set; }
 
-    // public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 }
